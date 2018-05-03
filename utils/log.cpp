@@ -24,6 +24,8 @@
 #include "log.h"
 #include "types.h"
 
+#include "fmt/format.h"
+
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #define LOG_NN 0x10 /* unique value */
@@ -89,7 +91,7 @@ void _llog(int nLevel, const char *ss)
 
     //int len = 64 + (int) strlen(fmt) + 2;
     //f = (char*) malloc(len);
-    fprintf(stdout, "[%d-%02d-%02d %02d:%02d:%02d]%s %s%s\n",
+    fprintf(stdout, "\r[%d-%02d-%02d %02d:%02d:%02d]%s %s%s\n",
         tm.tm_year + 1900,
         tm.tm_mon + 1,
         tm.tm_mday,
@@ -149,4 +151,34 @@ void logn(std::string s)
 {
     CHECK_S;
     _llog(LOG_NN, s.c_str());
+}
+
+static char gProgressSymbolArr[] = "\\|/*";
+static uint32_t   gProgressSymbolCounter = 0;
+
+void logprogress(std::string s)
+{
+    if(s.length() == 0)
+        return;
+    gProgressSymbolCounter++;
+
+    s = fmt::format("{} {}", (char)gProgressSymbolArr[gProgressSymbolCounter % (sizeof(gProgressSymbolArr)-1)], s);
+    fprintf(stdout, "\33[2K\r%s" CL_N, s.c_str());
+    fflush(stdout);
+}
+
+void logprogressK(std::string s)
+{
+    if(s.length() > 0 && s[s.length()-1] != '\n')
+        s += "\n";
+    fprintf(stdout, "\33[2K\r" CL_GRN "+" CL_N " %s" CL_N, s.c_str());
+    fflush(stdout);
+}
+
+void logprogressF(std::string s)
+{
+    if(s.length() > 0 && s[s.length()-1] != '\n')
+        s += "\n";
+    fprintf(stdout, "\33[2K\r" CL_RED "-" CL_N " %s" CL_N, s.c_str());
+    fflush(stdout);
 }

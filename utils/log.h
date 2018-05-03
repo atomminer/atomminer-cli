@@ -21,4 +21,8 @@ void logn(std::string s);   // notice
 
 void logproto(std::string s);
 
+void logprogress(std::string s);
+void logprogressK(std::string s);
+void logprogressF(std::string s);
+
 #endif // LOG_H

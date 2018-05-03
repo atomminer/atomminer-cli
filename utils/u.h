@@ -13,6 +13,7 @@
 #define U_H
 
 #include <string>
+#include "QString"
 
 class U
 {
@@ -25,6 +26,10 @@ public:
     static uint32_t le32dec(const void *pp);
     static uint32_t le32(std::string s);
     static uint32_t be32dec(const void *pp);
+
+    static QString home();
+    static QString firmware();
+    static QString files();
 };
 
 #endif // U_H

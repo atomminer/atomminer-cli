@@ -36,13 +36,14 @@ SOURCES += \
     utils/log.cpp \
     utils/format.cc \
     api/api.cpp \
-    settings/settings.cpp \
     stratum/stratumjob.cpp \
     utils/u.cpp \
     g.cpp \
     device/device.cpp \
     device/devicemanager.cpp \
-    device/hotplug.cpp
+    device/hotplug.cpp \
+    firmware/firmware.cpp \
+    settings/conf.cpp
 
 HEADERS += \
     stratum/stratum.h \
@@ -68,15 +69,34 @@ HEADERS += \
     utils/fmt/printf.h \
     utils/fmt/time.h \
     api/api.h \
-    settings/settings.h \
     stratum/stratumjob.h \
     utils/u.h \
     g.h \
     device/device.h \
     device/devicemanager.h \
-    device/hotplug.h
+    device/hotplug.h \
+    firmware/firmware.h \
+    settings/conf.h
 
+
+!greaterThan(QT_MAJOR_VERSION, 4): {
+
+SOURCES += json/qjsonwriter.cpp \
+    json/qjsonvalue.cpp \
+    json/qjsonparser.cpp \
+    json/qjsonobject.cpp \
+    json/qjsondocument.cpp \
+    json/qjsonarray.cpp \
+    json/qjson.cpp
+
+HEADERS += qjsonwriter_p.h \
+    json/qjsonvalue.h \
+    json/qjsonparser_p.h \
+    json/qjson_p.h \
+    json/qjsonobject.h \
+    json/qjsonexport.h \
+    json/qjsondocument.h \
+    json/qjsonarray.h
+}
 
 LIBS += ../lib/libcryptopp.a
-LIBS += /usr/lib/x86_64-linux-gnu/libboost_system.a
-LIBS += /usr/lib/x86_64-linux-gnu/libboost_filesystem.a

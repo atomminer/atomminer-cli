@@ -19,6 +19,7 @@
 #include <curl/easy.h>
 #include "json/jansson.hpp"
 #include "utils/fmt/format.h"
+#include "settings/conf.h"
 #include "stratum.h"
 #include "build.h"
 #include "g.h"
@@ -129,9 +130,11 @@ std::string Stratum::getStatus()
     return _status;
 }
 
-Stratum* Stratum::connect(std::string url, std::string login, std::string pass)
+Stratum* Stratum::connect(QString url, QString login, QString pass)
 {
     lock_t lock(_mutex);
+
+    log(fmt::format("Connecting to {}", url.toStdString()));
 
     _status = "Connecting";
     _url = url;
@@ -160,7 +163,7 @@ bool Stratum::isConnected()
     return _bConnected;
 }
 
-void Stratum::setAlgo(std::string algo)
+void Stratum::setAlgo(QString algo)
 {
     _algo = algo;
 }
@@ -209,16 +212,18 @@ bool Stratum::_connect()
     _csrf = "123";
 
     //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
-    curl_easy_setopt(_curl, CURLOPT_URL, _url.c_str());
+    curl_easy_setopt(_curl, CURLOPT_URL, _url.toStdString().c_str());
     curl_easy_setopt(_curl, CURLOPT_FRESH_CONNECT, 1);
     curl_easy_setopt(_curl, CURLOPT_CONNECTTIMEOUT, 30);
     curl_easy_setopt(_curl, CURLOPT_ERRORBUFFER, _curlError);
     curl_easy_setopt(_curl, CURLOPT_NOSIGNAL, 1);
     curl_easy_setopt(_curl, CURLOPT_TCP_NODELAY, 1);
 
-    // TODO:
-    //curl_easy_setopt(_curl, CURLOPT_PROXY, opt_proxy);
-    //curl_easy_setopt(_curl, CURLOPT_PROXYTYPE, opt_proxy_type);
+    if(conf()->proxy())
+    {
+        curl_easy_setopt(_curl, CURLOPT_PROXY, qPrintable(conf()->proxyUrl()));   // replace with your actual proxy
+        curl_easy_setopt(_curl, CURLOPT_PROXYPORT, qPrintable(conf()->proxyPort()));
+    }
     curl_easy_setopt(_curl, CURLOPT_HTTPPROXYTUNNEL, 1);
     curl_easy_setopt(_curl, CURLOPT_SOCKOPTFUNCTION, curl_sockopt_keepalive_cb);
     curl_easy_setopt(_curl, CURLOPT_OPENSOCKETFUNCTION, curl_opensocket_grab_cb);
@@ -394,7 +399,7 @@ bool Stratum::_subscribe()
 
 bool Stratum::_authorize()
 {
-    std::string s = fmt::format("{{\"id\": 3, \"method\": \"mining.authorize\", \"params\": [\"{}\", \"{}\", \"{}\"]}}", _login, _pass, _csrf);
+    std::string s = fmt::format("{{\"id\": 3, \"method\": \"mining.authorize\", \"params\": [\"{}\", \"{}\", \"{}\"]}}", _login.toStdString(), _pass.toStdString(), _csrf);
     if(!_send(s))
     {
         logw("Error sending authorization");
@@ -528,7 +533,7 @@ void Stratum::_process_command(std::string cmd)
         job->_ntime = params[idx++].as_string();
         // we're ignoring restart flag here and will restart every time stratum sends notify
 
-        std::string algo = _algo;
+        std::string algo = _algo.toStdString();
         if(jalgo)
             algo = jalgo.as_string();
 
@@ -620,6 +625,13 @@ void Stratum::thread()
             _keepAliveTimer = std::chrono::system_clock::now();
             _bConnected = true;
             emit connected();
+            continue;
+        }
+
+        if(!_curl)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            continue;
         }
 
         //read data and process

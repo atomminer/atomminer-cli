@@ -9,6 +9,9 @@
  *      Author: AtomMiner - null3128
  */
 
+#include <QDir>
+#include <QString>
+
 #include "fmt/format.h"
 #include "log.h"
 #include "u.h"
@@ -74,4 +77,19 @@ uint32_t U::be32dec(const void *pp)
     const uint8_t *p = (uint8_t const *)pp;
     return ((uint32_t)(p[3]) + ((uint32_t)(p[2]) << 8) +
         ((uint32_t)(p[1]) << 16) + ((uint32_t)(p[0]) << 24));
+}
+
+QString U::home()
+{
+    return QDir::homePath();
+}
+
+QString U::firmware()
+{
+    return U::home() + "/.atomminer/firmware/";
+}
+
+QString U::files()
+{
+    return U::home() + "/.atomminer/";
 }

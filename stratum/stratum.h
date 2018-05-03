@@ -36,13 +36,13 @@ public:
     static Stratum* inst();
 
     // disconnects from any active pool if any and connects to new supplied pool
-    Stratum* connect(std::string url, std::string login, std::string pass);
+    Stratum* connect(QString url, QString login, QString pass);
     Stratum* disconnect();
 
     bool isConnected();
 
     // sets the algo(s) we're willing to mine. empty string for autopool
-    void setAlgo(std::string algo);
+    void setAlgo(QString algo);
 
 public:
     // get human readable status
@@ -95,11 +95,11 @@ private:
     bool _bConnected;
 
     std::string _status;
-    std::string _url;
-    std::string _login;
-    std::string _pass;
+    QString _url;
+    QString _login;
+    QString _pass;
 
-    std::string _algo;
+    QString _algo;
 
     // stratum jobs
     // todo: delete jobs on pool disconnect
