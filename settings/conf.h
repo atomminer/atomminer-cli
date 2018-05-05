@@ -14,14 +14,9 @@
 
 #include <QString>
 
-#if QT_VERSION >= 0x050000
 #include <QJsonArray>
 #include <QJsonDocument>
-#else
-#include "json/qjsonarray.h"
-#include "json/qjsonobject.h"
-#include "json/qjsondocument.h"
-#endif
+#include <QJsonObject>
 
 class Conf
 {
@@ -41,6 +36,7 @@ public:
     bool apiSSL();
     bool apiLogin();
     QString apiCert();
+    QString apiCertKeyPass();
     QString apiUser();
     QString apiPassword();
 

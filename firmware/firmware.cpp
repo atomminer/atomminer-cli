@@ -11,14 +11,9 @@
 
 #include <QDir>
 #include <QtGlobal>
-#if QT_VERSION >= 0x050000
 #include <QJsonArray>
 #include <QJsonDocument>
-#else
-#include "json/qjsonarray.h"
-#include "json/qjsonobject.h"
-#include "json/qjsondocument.h"
-#endif
+#include <QJsonObject>
 #include <QCryptographicHash>
 #include <thread>
 #include <curl/curl.h>
@@ -177,7 +172,7 @@ bool Firmware::_download(QString what, void *h)
 void Firmware::checkLocalFiles()
 {
     if(_printToConsole)
-        logprogress("Checking system integrity...");
+        logprogress("Checking system files...");
     _fwMap.clear();
     _othersMap.clear();
 
@@ -186,24 +181,24 @@ void Firmware::checkLocalFiles()
     foreach(QString filename, files)
     {
         if(_printToConsole)
-            logprogress(fmt::format("Checking system integrity [{}]", qPrintable(filename)));
+            logprogress(fmt::format("Checking system files [{}]", qPrintable(filename)));
         _fwMap[_getHash(U::firmware() + filename)] = filename;
     }
 
     if(_printToConsole)
-        logprogress("Checking system integrity...");
+        logprogress("Checking system files...");
 
     directory = QDir(U::files());
     files = directory.entryList(QStringList() << "*.*", QDir::Files);
     foreach(QString filename, files)
     {
         if(_printToConsole)
-            logprogress(fmt::format("Checking system integrity [{}]", qPrintable(filename)));
+            logprogress(fmt::format("Checking system files [{}]", qPrintable(filename)));
         _othersMap[_getHash(U::files() + filename)] = filename;
     }
 
     if(_printToConsole)
-        logprogressK("Checking system integrity...Done");
+        logprogressK("Checking system files...Done");
 
 #ifdef PRINT_FILES
     if(_printToConsole)
@@ -312,4 +307,12 @@ bool Firmware::checkUpdates(bool recheck)
 
     _bUpToDate = true;
     return true;
+}
+
+void Firmware::clearAllFirmware()
+{
+    QDir directory(U::firmware());
+    QStringList files = directory.entryList(QStringList() << "*.*", QDir::Files);
+    foreach(QString filename, files)
+        directory.remove(filename);
 }

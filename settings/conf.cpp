@@ -19,7 +19,7 @@
 
 Conf *Conf::_instance = nullptr;
 static QString default_settings = "{\"pool\":\"http://keccak.pool.atomminer.com:5133\",\"user\":\"\",\"password\":\"\","
-                                      "\"api\":true,\"api_port\":9123,\"api_ssl\":true,\"api_cert\":\"\",\"api_login\":true,\"api_user\":\"api\",\"api_password\":\"pass\","
+                                      "\"api\":true,\"api_port\":9123,\"api_ssl\":true,\"api_cert\":\":/api_server.pem\",\"api_cert_key\":\"\",\"api_login\":true,\"api_user\":\"api\",\"api_password\":\"pass\","
                                       "\"proxy\":false,\"proxy_url\":\"\",\"proxy_port\":8080}";
 
 Conf *conf()
@@ -120,16 +120,21 @@ int  Conf::apiPort()
 
 bool Conf::apiSSL()
 {
-    return _boolValue("api_ssl", true);
+    return _boolValue("api_ssl", false);
 }
 
 bool Conf::apiLogin()
 {
-    return _boolValue("api_login", false);
+    return _boolValue("api_login", true);
 }
 QString Conf::apiCert()
 {
-    return _stringValue("api_cert", "");
+    return _stringValue("api_cert", ":/api_server.pem");
+}
+
+QString Conf::apiCertKeyPass()
+{
+    return _stringValue("api_key_pass", "");
 }
 
 QString Conf::apiUser()

@@ -18,5 +18,6 @@ G::G()
 
 volatile bool G::isShuttingDown = false;
 DeviceManager G::DevMgr;
+QDateTime    G::startTime = QDateTime::currentDateTime();
 
 HotPlug G::HotPlugHandler;

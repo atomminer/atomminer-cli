@@ -12,34 +12,48 @@
 #ifndef __API_H__
 #define __API_H__
 
-#include <mutex>
-#include <string>
-#include <thread>
+#include <QObject>
+#include <QList>
+#include <QByteArray>
+#include <QSslError>
+#include <QSslKey>
+#include <QSslSocket>
+#include <QTcpServer>
 
-class API
+class APIServer : public QTcpServer
 {
+Q_OBJECT
 public:
-    API();
-    ~API();
+    APIServer(QObject *parent = 0);
 
-    void start();
-    void stop();
+    void setSslLocalCertificate(const QSslCertificate &certificate);
+    bool setSslLocalCertificate(const QString &path, QSsl::EncodingFormat format = QSsl::Pem);
 
-    static API* inst();
-    static void destroy();
-
-private:
-    void thread();
+    void setSslPrivateKey(const QSslKey &key);
+    bool setSslPrivateKey(const QString &fileName, QSsl::KeyAlgorithm algorithm = QSsl::Rsa, QSsl::EncodingFormat format = QSsl::Pem, const QByteArray &passPhrase = QByteArray());
 
 private:
-    static API *_instance;
-    std::thread *_pThread;
-    std::mutex _mutex;
+    bool checkAuth(QString sRequest);
+    QString requestPath(QString sRequest);
+    QString buildReplyHeaders(int code, QString reply ="");
+    int buildResponse(QString request, QString *response);
 
-    bool _bShutdown;
-    bool _bShutdownDone;
+    QString stats();
+    QString deviceStats(QString device);
+
+private:
+    QSslKey             _key;
+    QSslCertificate     _cert;
+    bool                _useSSL;
+
+protected:
+    void incomingConnection(qintptr socketDescriptor) override final;
+
+public slots:
+    void run();
 };
 
-API *api();
+
+void apiStart();
 
 #endif

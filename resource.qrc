@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="api_server.pem">docs/api_server.pem</file>
+    </qresource>
+</RCC>

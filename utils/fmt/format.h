@@ -115,12 +115,12 @@
 # endif
 #endif
 
-#if FMT_USE_USER_DEFINED_LITERALS && \
-    (FMT_GCC_VERSION >= 600 || FMT_CLANG_VERSION >= 304)
-# define FMT_UDL_TEMPLATE 1
-#else
-# define FMT_UDL_TEMPLATE 0
-#endif
+//#if FMT_USE_USER_DEFINED_LITERALS && \
+//    (FMT_GCC_VERSION >= 600 || FMT_CLANG_VERSION >= 304)
+//# define FMT_UDL_TEMPLATE 1
+//#else
+//# define FMT_UDL_TEMPLATE 0
+//#endif
 
 #ifndef FMT_USE_EXTERN_TEMPLATES
 # ifndef FMT_HEADER_ONLY
@@ -3526,7 +3526,7 @@ inline namespace literals {
 
 # if FMT_UDL_TEMPLATE
 template <typename Char, Char... CHARS>
-FMT_CONSTEXPR internal::udl_formatter<Char, CHARS...> operator""_format() {
+ internal::udl_formatter<Char, CHARS...> operator""_format() {
   return {};
 }
 # else

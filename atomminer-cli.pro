@@ -1,5 +1,5 @@
 QT -= gui
-QT       += core
+QT       += core network
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
@@ -78,25 +78,7 @@ HEADERS += \
     firmware/firmware.h \
     settings/conf.h
 
-
-!greaterThan(QT_MAJOR_VERSION, 4): {
-
-SOURCES += json/qjsonwriter.cpp \
-    json/qjsonvalue.cpp \
-    json/qjsonparser.cpp \
-    json/qjsonobject.cpp \
-    json/qjsondocument.cpp \
-    json/qjsonarray.cpp \
-    json/qjson.cpp
-
-HEADERS += qjsonwriter_p.h \
-    json/qjsonvalue.h \
-    json/qjsonparser_p.h \
-    json/qjson_p.h \
-    json/qjsonobject.h \
-    json/qjsonexport.h \
-    json/qjsondocument.h \
-    json/qjsonarray.h
-}
-
 LIBS += ../lib/libcryptopp.a
+
+RESOURCES += \
+    resource.qrc

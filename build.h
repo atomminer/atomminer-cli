@@ -15,9 +15,10 @@
 #include "utils/types.h"
 #include "utils/log.h"
 
+#define PACKAGE_NAME    "AtomMiner CLI"
 #define PACKAGE_VERSION "1.0.0"
 
-#define USER_AGENT "atomminer-cli/" PACKAGE_VERSION
+#define USER_AGENT      "atomminer-cli/" PACKAGE_VERSION
 
 #define BUILD_DATE __DATE__ " " __TIME__ "\x0"
 

@@ -54,13 +54,35 @@ static void signal_handler(int sig)
     }
 }
 
+QString optionGet(QString key, QChar sep = QChar('\0'))
+{
+    bool sepd = sep != QChar('\0');
+    int pos=sepd ? pApp->arguments().indexOf(QRegExp('^'+key+sep+"\\S*")) : pApp->arguments().indexOf(QRegExp(key));
+    return pos == -1 ?
+        QString() : (sepd ? pApp->arguments().at(pos).split(sep).at(1) :
+        (++pos < pApp->arguments().size() ? pApp->arguments().at(pos) : QString()));
+}
+
+bool optionIsSet(QString option)
+{
+    return pApp->arguments().contains("option");
+}
+
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
+    QCoreApplication::setApplicationName(PACKAGE_NAME);
+    QCoreApplication::setApplicationVersion(PACKAGE_VERSION);
     pApp = &a;
 
     printf("AtomMiner CLI Miner " PACKAGE_VERSION " \n");
     printf("-- built on %s with %s\n",  BUILD_DATE, COMPILER);
+
+    if(optionIsSet("--help") || optionIsSet("-h"))
+    {
+        // TODO: print help and exit
+        return 0;
+    }
 
     if (curl_global_init(CURL_GLOBAL_ALL))
     {
@@ -73,8 +95,9 @@ int main(int argc, char *argv[])
     signal(SIGTERM, signal_handler);
 
     QString sConf = QCoreApplication::applicationDirPath() + "/atomminer.conf";
-    if(argc > 1)
-        sConf = argv[1];
+    QString optConf = optionGet("conf");
+    if(!optConf.isNull())
+        sConf = optConf;
 
     if(!conf()->load(sConf))
         conf()->load("");
@@ -86,6 +109,10 @@ int main(int argc, char *argv[])
         fwPath.mkpath(".");
 
     Firmware intCheck;
+
+    if(optionIsSet("--cleandata"))
+        intCheck.clearAllFirmware();
+
     if(!intCheck.checkUpdates())
     {
         loge("Failed to check for updates. Please check your internet connection and try again.");
@@ -100,8 +127,6 @@ int main(int argc, char *argv[])
         loge("You've been Warned!!!");
     }
 
-    // TODO: load preferred device settings
-
     logprogressK("Starting miner...");
     if(conf()->user().isEmpty())
     {
@@ -110,7 +135,7 @@ int main(int argc, char *argv[])
     }
 
     if(conf()->api())
-        api()->start();
+        apiStart();
 
     G::HotPlugHandler.start();
 
@@ -119,9 +144,8 @@ int main(int argc, char *argv[])
 
     int nExit = a.exec();
 
-    G::isShuttingDown = true;
     stratum()->disconnect();
-    API::destroy();
+    G::isShuttingDown = true;
 
     return nExit;
 }

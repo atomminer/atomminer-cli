@@ -12,6 +12,8 @@
 #ifndef G_H
 #define G_H
 
+#include <QTime>
+
 #include "device/hotplug.h"
 #include "device/devicemanager.h"
 
@@ -22,6 +24,7 @@ public:
 
     static volatile bool isShuttingDown;
     static DeviceManager DevMgr;
+    static QDateTime    startTime;
 
     // TODO: Stratum manager?
 

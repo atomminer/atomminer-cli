@@ -23,6 +23,8 @@ public:
     void checkLocalFiles();
     bool checkUpdates(bool recheck = false);
 
+    void clearAllFirmware();
+
 private:
     QString _getHash(QString file);
     QString _getHashString(QString s);

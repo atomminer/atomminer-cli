@@ -56,8 +56,10 @@
    FMT_MSC_VER >= 1910)
 #endif
 #if FMT_USE_CONSTEXPR
-# define FMT_CONSTEXPR constexpr
-# define FMT_CONSTEXPR_DECL constexpr
+//# define FMT_CONSTEXPR constexpr
+//# define FMT_CONSTEXPR_DECL constexpr
+# define FMT_CONSTEXPR inline
+# define FMT_CONSTEXPR_DECL
 #else
 # define FMT_CONSTEXPR inline
 # define FMT_CONSTEXPR_DECL
@@ -248,7 +250,7 @@ class basic_string_view {
   FMT_CONSTEXPR iterator begin() const { return data_; }
   FMT_CONSTEXPR iterator end() const { return data_ + size_; }
 
-  FMT_CONSTEXPR void remove_prefix(size_t n) {
+  void remove_prefix(size_t n) {
     data_ += n;
     size_ -= n;
   }
