@@ -47,7 +47,7 @@ AtomMinerDevice::AtomMinerDevice(libusb_device *dev)
         libusb_get_string_descriptor_ascii(_handle, desc.iSerialNumber, s, 256);
     Serial = (const char*)s;
 
-    GetFirmwareInfo();
+    firmwareInfo();
 }
 
 bool AtomMinerDevice::isValid()
@@ -60,7 +60,7 @@ bool AtomMinerDevice::isConnected()
     return _handle != NULL;
 }
 
-bool AtomMinerDevice::Open()
+bool AtomMinerDevice::open()
 {
     if(!isValid())
         return false;
@@ -76,7 +76,7 @@ bool AtomMinerDevice::Open()
     return true;
 }
 
-void AtomMinerDevice::Close()
+void AtomMinerDevice::close()
 {
     if(_handle)
     {
@@ -85,20 +85,26 @@ void AtomMinerDevice::Close()
     }
 }
 
-void AtomMinerDevice::Reset()
+void AtomMinerDevice::reset()
 {
     libusb_reset_device(_handle);
 }
 
-bool AtomMinerDevice::Reconnect()
+bool AtomMinerDevice::reconnect()
 {
-    Close();
-    return Open();
+    close();
+    return open();
 }
 
-void AtomMinerDevice::BlinkLED()
+void AtomMinerDevice::blinkLED()
 {
     libusb_control_transfer(_handle, 0x77, 0, 0x02, 0, 0, 0, DEFAULT_CMD_TIMEOUT);
+}
+
+bool AtomMinerDevice::getIO(uint8_t *IObuf)
+{
+    int r = libusb_control_transfer(_handle, 0xb2, 0x02, 0x01, 0, IObuf, 64, DEFAULT_CMD_TIMEOUT);
+    return r == 64;
 }
 
 int AtomMinerDevice::sendData(uint8_t channel, uint8_t *buf, uint32_t size)
@@ -108,9 +114,9 @@ int AtomMinerDevice::sendData(uint8_t channel, uint8_t *buf, uint32_t size)
     return transferred;
 }
 
-void AtomMinerDevice::sendCmd(uint8_t reqType, uint8_t req, uint16_t value, uint16_t idx)
+void AtomMinerDevice::sendCmd(uint8_t reqType, uint8_t req, uint16_t value, uint16_t idx, char* data, int size)
 {
-    libusb_control_transfer(_handle, reqType, req, value, idx, 0, 0, DEFAULT_CMD_TIMEOUT);
+    libusb_control_transfer(_handle, reqType, req, value, idx, (unsigned char*)data, size, DEFAULT_CMD_TIMEOUT);
 }
 
 int AtomMinerDevice::readCmd(uint8_t reqType, uint8_t req, uint16_t value, uint16_t idx, uint8_t *buf, uint32_t size)
@@ -147,7 +153,7 @@ std::string AtomMinerDevice::DeviceStringFormatForList()
     return s;
 }
 
-std::string AtomMinerDevice::GetFirmwareInfo()
+std::string AtomMinerDevice::firmwareInfo()
 {
     uint8_t buf[64];
     int r = libusb_control_transfer(_handle, 0xb2, 0x01, 0, 0, buf, 64, DEFAULT_CMD_TIMEOUT);

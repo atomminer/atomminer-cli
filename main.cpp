@@ -18,6 +18,7 @@
 #include <QtCore>
 #include <QDir>
 
+#include "device/miningmanager.h"
 #include "stratum/stratum.h"
 #include "api/api.h"
 #include "settings/conf.h"
@@ -75,8 +76,9 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(PACKAGE_VERSION);
     pApp = &a;
 
-    printf("AtomMiner CLI Miner " PACKAGE_VERSION " \n");
-    printf("-- built on %s with %s\n",  BUILD_DATE, COMPILER);
+    // catch Ctrl+C and TERM
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
 
     if(optionIsSet("--help") || optionIsSet("-h"))
     {
@@ -84,15 +86,14 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    printf("AtomMiner CLI Miner " PACKAGE_VERSION " \n");
+    printf("  -- built on %s with %s\n",  BUILD_DATE, COMPILER);
+
     if (curl_global_init(CURL_GLOBAL_ALL))
     {
         loge("FATAL: Failed to init CURL. Exiting...");
         exit(1);
     }
-
-    // catch Ctrl+C and TERM
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
 
     QString sConf = QCoreApplication::applicationDirPath() + "/atomminer.conf";
     QString optConf = optionGet("conf");
@@ -108,23 +109,28 @@ int main(int argc, char *argv[])
     if(!fwPath.exists())
         fwPath.mkpath(".");
 
-    Firmware intCheck;
-
     if(optionIsSet("--cleandata"))
-        intCheck.clearAllFirmware();
+        G::fw.clearAllFirmware();
 
-    if(!intCheck.checkUpdates())
+    if(!optionIsSet("--nodownload"))
     {
-        loge("Failed to check for updates. Please check your internet connection and try again.");
-        logw("It is not recommended to use miners without latest firmware images");
+        if(!G::fw.checkUpdates())
+        {
+            loge("Failed to check for updates. Please check your internet connection and try again.");
+            logw("It is not recommended to use miners without latest firmware images");
 
-        int nCnt = 15;
-        while (nCnt > 0) {
-            logw(fmt::format("Continue at your own risk in {}", nCnt--));
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            int nCnt = 15;
+            while (nCnt > 0) {
+                logw(fmt::format("Continue at your own risk in {}", nCnt--));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            }
+
+            loge("You've been Warned!!!");
         }
-
-        loge("You've been Warned!!!");
+    }
+    else
+    {
+        loge("   WARN: --nodownload found. Existing images will be used. Use at your own risk.");
     }
 
     logprogressK("Starting miner...");
@@ -134,12 +140,22 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // algo is used as a fallback for traditional pools. Fail for now if empty
+    if(conf()->algo().isEmpty())
+    {
+        loge("No algo. Please specify mining algo in atomminer.conf and restart. Exiting...");
+        return 1;
+    }
+
     if(conf()->api())
         apiStart();
 
-    G::HotPlugHandler.start();
+    // mining manager has to start befor hotplug to receive device notifications
+    miningStart();
+    G::HotPlugHandler->start();
 
-    // TODO: replace with stratum manager
+    // TODO: replace with stratum manager ?
+    stratum()->setAlgo(conf()->algo());
     stratum()->connect(conf()->pool(), conf()->user(), conf()->password());
 
     int nExit = a.exec();
@@ -147,5 +163,7 @@ int main(int argc, char *argv[])
     stratum()->disconnect();
     G::isShuttingDown = true;
 
-    return nExit;
+    QThread::msleep(200);
+
+    return 0;
 }

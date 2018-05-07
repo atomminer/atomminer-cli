@@ -27,6 +27,8 @@ public:
     static uint32_t le32(std::string s);
     static uint32_t be32dec(const void *pp);
 
+    static void bswap32(char *data);
+
     static QString home();
     static QString firmware();
     static QString files();

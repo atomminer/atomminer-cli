@@ -15,6 +15,8 @@
 #include "utils/types.h"
 #include "utils/log.h"
 
+#define USE_CURSES
+
 #define PACKAGE_NAME    "AtomMiner CLI"
 #define PACKAGE_VERSION "1.0.0"
 

@@ -79,6 +79,16 @@ uint32_t U::be32dec(const void *pp)
         ((uint32_t)(p[1]) << 16) + ((uint32_t)(p[0]) << 24));
 }
 
+void U::bswap32(char *data)
+{
+    char t = data[0];
+    data[0] = data[3];
+    data[3] = t;
+    t = data[1];
+    data[1] = data[2];
+    data[2] = t;
+}
+
 QString U::home()
 {
     return QDir::homePath();

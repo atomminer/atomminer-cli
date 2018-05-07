@@ -72,21 +72,21 @@ bool Conf::load(QString path)
     return true;
 }
 
-QString Conf::_stringValue(QString name, QString def)
+QString Conf::stringValue(QString name, QString def)
 {
     if(!_config[name].isString())
         return def;
     return _config[name].toString();
 }
 
-bool Conf::_boolValue(QString name, bool def)
+bool Conf::boolValue(QString name, bool def)
 {
     if(!_config[name].isBool())
         return def;
     return _config[name].toBool();
 }
 
-int Conf::_intValue(QString name, int def)
+int Conf::intValue(QString name, int def)
 {
     if(!_config[name].isDouble())
         return def;
@@ -95,68 +95,73 @@ int Conf::_intValue(QString name, int def)
 
 QString Conf::pool()
 {
-    return _stringValue("pool", "http://keccak.pool.atomminer.com:5133");
+    return stringValue("pool", "http://keccak.pool.atomminer.com:5133");
+}
+
+QString Conf::algo()
+{
+    return stringValue("algo", "");
 }
 
 QString Conf::user()
 {
-    return _stringValue("user", "");
+    return stringValue("user", "");
 }
 
 QString Conf::password()
 {
-    return _stringValue("password", "");
+    return stringValue("password", "");
 }
 
 bool Conf::api()
 {
-    return _boolValue("api", true);
+    return boolValue("api", true);
 }
 
 int  Conf::apiPort()
 {
-    return _intValue("api_port", 9123);
+    return intValue("api_port", 9123);
 }
 
 bool Conf::apiSSL()
 {
-    return _boolValue("api_ssl", false);
+    return boolValue("api_ssl", false);
 }
 
 bool Conf::apiLogin()
 {
-    return _boolValue("api_login", true);
+    return boolValue("api_login", true);
 }
 QString Conf::apiCert()
 {
-    return _stringValue("api_cert", ":/api_server.pem");
+    return stringValue("api_cert", ":/api_server.pem");
 }
 
 QString Conf::apiCertKeyPass()
 {
-    return _stringValue("api_key_pass", "");
+    return stringValue("api_key_pass", "");
 }
 
 QString Conf::apiUser()
 {
-    return _stringValue("api_user", "api");
+    return stringValue("api_user", "api");
 }
 
 QString Conf::apiPassword()
 {
-    return _stringValue("api_password", "pass");
+    return stringValue("api_password", "pass");
 }
 
 bool Conf::proxy()
 {
-    return _boolValue("proxy", false);
+    return boolValue("proxy", false);
 }
 QString Conf::proxyUrl()
 {
-    return _stringValue("proxy_url", "");
+    return stringValue("proxy_url", "");
 }
 
 int Conf::proxyPort()
 {
-    return _intValue("proxy_port", 0);
+    return intValue("proxy_port", 0);
 }

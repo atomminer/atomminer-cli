@@ -316,3 +316,33 @@ void Firmware::clearAllFirmware()
     foreach(QString filename, files)
         directory.remove(filename);
 }
+
+QString Firmware::getFirmwareForAlgo(QString algo)
+{
+    QString sSearch;
+    QString sAlgo = algo.toLower();
+
+    if(sAlgo.isEmpty())
+        sSearch = "00";
+    else if(sAlgo == "keccak")
+        sSearch = "01";
+    else
+    {
+        loge(fmt::format("Firmware::getFirmwareForAlgo - Unknown algo requested: {}", algo.toStdString()));
+        return "";
+    }
+    QString sFirmware = "";
+    foreach (QString h, _fwMap.keys())
+    {
+        if(_fwMap[h].startsWith(sSearch))
+        {
+            sFirmware = _fwMap[h];
+            break;
+        }
+    }
+
+    if(sFirmware.isEmpty())
+        loge(fmt::format("Firmware::getFirmwareForAlgo - cant find firmware for {}", algo.toStdString()));
+
+    return sFirmware;
+}

@@ -24,23 +24,25 @@ public:
 
     bool isValid();
     bool isConnected();
-    bool Open();
-    void Close();
+    bool open();
+    void close();
 
-    void Reset();
-    bool Reconnect();
+    void reset();
+    bool reconnect();
 
-    void BlinkLED();
+    void blinkLED();
+
+    bool getIO(uint8_t *IObuf);
 
     int sendData(uint8_t channel, uint8_t *buf, uint32_t size);
-    void sendCmd(uint8_t reqType, uint8_t req, uint16_t value, uint16_t idx);
+    void sendCmd(uint8_t reqType, uint8_t req, uint16_t value, uint16_t idx, char* data = nullptr, int len = 0);
     int readCmd(uint8_t reqType, uint8_t req, uint16_t value, uint16_t idx, uint8_t *buf, uint32_t size);
 
     int readData(uint8_t channel, uint8_t *buf, uint32_t size);
 
     std::string DeviceString();
     std::string DeviceStringFormatForList();
-    std::string GetFirmwareInfo();
+    std::string firmwareInfo();
 
     libusb_device *getLL();
     libusb_device_handle *handle();

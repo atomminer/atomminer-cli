@@ -16,7 +16,7 @@ QMAKE_CXXFLAGS_WARN_ON = -Wno-unused-parameter
 
 INCLUDEPATH += /usr/include/libusb-1.0
 
-LIBS		+= -lcurl -lusb-1.0
+LIBS		+= -lcurl -lusb-1.0 -lz
 
 
 SOURCES += \
@@ -36,14 +36,18 @@ SOURCES += \
     utils/log.cpp \
     utils/format.cc \
     api/api.cpp \
-    stratum/stratumjob.cpp \
     utils/u.cpp \
     g.cpp \
     device/device.cpp \
     device/devicemanager.cpp \
     device/hotplug.cpp \
     firmware/firmware.cpp \
-    settings/conf.cpp
+    settings/conf.cpp \
+    utils/gz.cpp \
+    device/miningmanager.cpp \
+    device/miner.cpp \
+    stratum/stratumwork.cpp \
+    stratum/stratumtest.cpp
 
 HEADERS += \
     stratum/stratum.h \
@@ -69,16 +73,18 @@ HEADERS += \
     utils/fmt/printf.h \
     utils/fmt/time.h \
     api/api.h \
-    stratum/stratumjob.h \
     utils/u.h \
     g.h \
     device/device.h \
     device/devicemanager.h \
     device/hotplug.h \
     firmware/firmware.h \
-    settings/conf.h
-
-LIBS += ../lib/libcryptopp.a
+    settings/conf.h \
+    utils/gz.h \
+    device/miningmanager.h \
+    device/miner.h \
+    stratum/stratumwork.h \
+    stratum/stratumtest.h
 
 RESOURCES += \
     resource.qrc

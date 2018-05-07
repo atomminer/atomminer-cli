@@ -24,6 +24,10 @@
 #include "build.h"
 #include "g.h"
 
+#include "device/miningmanager.h"
+
+#include "stratumtest.h"
+
 // utility funcs
 #ifdef WIN32
 #define socket_blocks() (WSAGetLastError() == WSAEWOULDBLOCK)
@@ -38,7 +42,8 @@ static int curl_sockopt_keepalive_cb(void *, curl_socket_t fd, curlsocktype )
     int tcp_keepcnt = 3;
 #endif
     int tcp_keepintvl = 50;
-    int tcp_keepidle = 50;
+    //int tcp_keepidle = 50;
+    int tcp_keepidle = 7200; //https://www.tldp.org/HOWTO/html_single/TCP-Keepalive-HOWTO/
 #ifndef WIN32
     int keepalive = 1;
     if (unlikely(setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &keepalive,
@@ -94,11 +99,11 @@ Stratum* stratum()
 Stratum* Stratum::inst()
 {
     if(!Stratum::_instance)
-        Stratum::_instance = new Stratum();
+        Stratum::_instance = new Stratum(); //Test();
     return _instance;
 }
 
-Stratum::Stratum()
+Stratum::Stratum() : QObject(nullptr)
 {
     _url = "pool.atomminer.com:5133";
     _login = "";
@@ -160,17 +165,41 @@ Stratum* Stratum::disconnect()
 
 bool Stratum::isConnected()
 {
+    lock_t lock(_mutex);
     return _bConnected;
 }
 
 void Stratum::setAlgo(QString algo)
 {
+    lock_t lock(_mutex);
     _algo = algo;
+}
+
+QString Stratum::algo()
+{
+    lock_t lock(_mutex);
+    return _algo;
+}
+
+StratumWork* Stratum::getWork(QString algo)
+{
+    lock_t lock(_mutex);
+    return _jobs[algo.toStdString()] ? _jobs[algo.toStdString()]->getNewWork() : nullptr;
+}
+
+bool Stratum::hasWork(QString algo)
+{
+    lock_t lock(_mutex);
+    return _jobs[algo.toStdString()] != nullptr;
 }
 
 void Stratum::_disconnect(std::string reason)
 {
     lock_t lock(_mutex);
+
+    for (auto it : _jobs)
+        delete it.second;
+    _jobs.erase(_jobs.begin(), _jobs.end());
 
     if (_curl) {
         curl_easy_cleanup(_curl);
@@ -225,17 +254,25 @@ bool Stratum::_connect()
         curl_easy_setopt(_curl, CURLOPT_PROXYPORT, qPrintable(conf()->proxyPort()));
     }
     curl_easy_setopt(_curl, CURLOPT_HTTPPROXYTUNNEL, 1);
-    curl_easy_setopt(_curl, CURLOPT_SOCKOPTFUNCTION, curl_sockopt_keepalive_cb);
+    //curl_easy_setopt(_curl, CURLOPT_SOCKOPTFUNCTION, curl_sockopt_keepalive_cb);
+
+    // https://curl.haxx.se/libcurl/c/CURLOPT_TCP_KEEPALIVE.html
+    curl_easy_setopt(_curl, CURLOPT_TCP_KEEPALIVE, 1L);
+    curl_easy_setopt(_curl, CURLOPT_TCP_KEEPIDLE, 7200L);
+    curl_easy_setopt(_curl, CURLOPT_TCP_KEEPINTVL, 60L);
+
     curl_easy_setopt(_curl, CURLOPT_OPENSOCKETFUNCTION, curl_opensocket_grab_cb);
     curl_easy_setopt(_curl, CURLOPT_OPENSOCKETDATA, &_sock);
     curl_easy_setopt(_curl, CURLOPT_CONNECT_ONLY, 1);
     int rc = curl_easy_perform(_curl);
     if (rc) {
-        loge(fmt::format("Stratum connection failed: %s", _curlError));
+        loge(fmt::format("Stratum connection failed: {}", _curlError));
         curl_easy_cleanup(_curl);
         _curl = nullptr;
         return false;
     }
+
+    _bConnected = true;
 
     return true;
 }
@@ -298,6 +335,9 @@ std::string Stratum::_recv()
     {
         str = _buffer.substr(0, n + 1);
         _buffer.erase(0, n + 1);
+
+        logproto("< " + str);
+
         return str;
     }
     { // try to receive it
@@ -324,8 +364,6 @@ std::string Stratum::_recv()
                 str += s;
         } while (time(NULL) - rstart < 60 && -1 == (int)str.find("\n"));
     }
-
-    logproto("< " + str);
 
     _buffer += str;
 
@@ -389,8 +427,7 @@ bool Stratum::_subscribe()
 
     if((res[0][0])[0].as_string() == "mining.set_difficulty")
     {
-        _diff = (res[0][0])[1].as_real();
-        log(fmt::format("Stratum set difficulty to {0}", _diff));
+        _diff = (res[0][0])[1].as_number();
     }
 
 
@@ -516,21 +553,25 @@ void Stratum::_process_command(std::string cmd)
     {
         int idx = 0;
         StratumJob *job = new StratumJob();
-        //_merkle.clear();
-        job->_jobID = params[idx++].as_string();
-        job->_prevhash = params[idx++].as_string();
-        job->_coinb1 = params[idx++].as_string();
-        job->_coinb2 = params[idx++].as_string();
+        job->_algo = _algo;
+        job->_jobID = QString::fromStdString(params[idx++].as_string());
+        job->_prevhash = QString::fromStdString(params[idx++].as_string());
+        job->_coinb1 = QString::fromStdString(params[idx++].as_string());
+        job->_coinb2 = QString::fromStdString(params[idx++].as_string());
         // merkle here
         auto merkles = params[idx++];
         if(merkles.is_array())
         {
             for(int i = 0 ; i < (int)merkles.size() ; i++)
-                job->_merkle.push_back(merkles[i].as_string());
+                job->_merkle.push_back(QString::fromStdString(merkles[i].as_string()));
         }
-        job->_version = params[idx++].as_string();
-        job->_nbits = params[idx++].as_string();
-        job->_ntime = params[idx++].as_string();
+        job->_version = QString::fromStdString(params[idx++].as_string());
+        job->_nbits = QString::fromStdString(params[idx++].as_string());
+        job->_ntime = QString::fromStdString(params[idx++].as_string());
+        job->_diff = _diff;
+        job->_xnonceSize = _extraNonceSize;
+        job->_xnonce2Size = _extraNonceSize; // ??
+        job->_xnonce = QString::fromStdString(_extraNonce);
         // we're ignoring restart flag here and will restart every time stratum sends notify
 
         std::string algo = _algo.toStdString();
@@ -541,11 +582,11 @@ void Stratum::_process_command(std::string cmd)
             delete _jobs[algo]; // delete old job
         _jobs[algo] = job;
 
-        emit newJobReceived(algo);
+        emit newJobReceived(QString::fromStdString(algo));
     }
     else if(method == "mining.set_difficulty")
     {
-        _diff = params[0].as_real();
+        _diff = params[0].as_number();
         log(fmt::format("Stratum set difficulty to {0}", _diff));
     }
     else if(method == "mining.set_extranonce")
@@ -582,6 +623,29 @@ void Stratum::_process_command(std::string cmd)
     else
         logw(fmt::format("Unknown command from pool: {}", method));
 
+}
+
+void Stratum::submit(StratumWork *w)
+{ // submitting async? to be tested
+    if(!w)
+    {
+        logw("Attempt to submit non-existent job");
+        return;
+    }
+    if(!_bConnect)
+    {
+        logw("Attempt to submit a job while disconnected");
+        return;
+    }
+
+    std::string s;
+    s = fmt::format("{{\"method\": \"mining.submit\", \"params\": [\"{}\", \"{}\", \"{}\", \"{}\", \"{}\"], \"id\":4}}",
+            _login.toStdString(),
+            w->jobID.toStdString(),
+            w->xnonce2.toStdString(),
+            w->ntime.toStdString(),
+            w->nonce.toStdString());
+    _send(s);
 }
 
 void Stratum::thread()
@@ -634,32 +698,34 @@ void Stratum::thread()
             continue;
         }
 
-        //read data and process
-        if (!_socket_full(300)) // 5 minutes
+        if(!_buffer.length())
         {
-            loge("Connection timeout. Reconnecting...");
-            _disconnect();
-            continue;
+            if (!_socket_full(300)) // 5 minutes
+            {
+                loge("Connection timeout. Reconnecting...");
+                _disconnect();
+                continue;
+            }
         }
 
         auto s = _recv();
-        if(s.length() == 0)
-        {
-            loge("Connection interrupted. Reconnecting...");
-            _disconnect();
-            continue;
-        }
+//        if(s.length() == 0)
+//        {
+//            loge("Connection interrupted. Reconnecting...");
+//            _disconnect();
+//            continue;
+//        }
 
         _process_command(s);
 
         aclock_t timeNow = std::chrono::system_clock::now();
         long int seconds = std::chrono::duration_cast<std::chrono::seconds>(timeNow - _keepAliveTimer).count();
 
-        if(seconds >= 120)
-        { //2 minutes
-            _keepAliveTimer = timeNow;
-            _send("{\"id\":0,\"result\":\"pong\",\"error\":null}");
-        }
+//        if(seconds >= 120)
+//        { //2 minutes
+//            _keepAliveTimer = timeNow;
+//            _send("{\"id\":0,\"result\":\"pong\",\"error\":null}");
+//        }
     }
 
     _bShutdownDone = true;

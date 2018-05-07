@@ -24,16 +24,17 @@ public:
     DeviceManager();
     ~DeviceManager();
 
-    void Add(libusb_device *usbdev);
-    void Add(libusb_device *usbdev, AtomMinerDevice *dev);
-    void Remove(libusb_device *usbdev);
-    AtomMinerDevice *Get(libusb_device *dev);
-    AtomMinerDevice *Get(uint32_t idx);
-    uint32_t Count();
+    void add(libusb_device *usbdev);
+    void add(libusb_device *usbdev, AtomMinerDevice *dev);
+    void remove(libusb_device *usbdev);
+    AtomMinerDevice *get(libusb_device *dev);
+    AtomMinerDevice *get(uint32_t idx);
+    uint32_t count();
+
+    bool has(AtomMinerDevice *dev);
 
 private:
     std::mutex                      _mutex;
-    //std::vector<AtomMinerDevice*>   _devs;
     std::map<libusb_device*, AtomMinerDevice*> _devs;
 };
 

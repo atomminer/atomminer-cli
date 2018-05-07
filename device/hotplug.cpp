@@ -67,7 +67,7 @@ void HotPlug::run()
         if(goneDevices.size())
         {
             libusb_device *dev = goneDevices.dequeue();
-            G::DevMgr.Remove(dev);
+            G::DevMgr.remove(dev);
             emit deviceGone(dev);
         }
 
@@ -75,9 +75,10 @@ void HotPlug::run()
         {
             libusb_device *d = newDevices.dequeue();
             AtomMinerDevice *dev = new AtomMinerDevice(d);
-            G::DevMgr.Add(d, dev);
+            G::DevMgr.add(d, dev);
             emit deviceAdd(d);
         }
+        QThread::msleep(50);
     }
 
     libusb_hotplug_deregister_callback(NULL, handle);

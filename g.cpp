@@ -19,5 +19,6 @@ G::G()
 volatile bool G::isShuttingDown = false;
 DeviceManager G::DevMgr;
 QDateTime    G::startTime = QDateTime::currentDateTime();
+Firmware     G::fw;
 
-HotPlug G::HotPlugHandler;
+HotPlug *G::HotPlugHandler = new HotPlug();

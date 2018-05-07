@@ -25,6 +25,8 @@ public:
 
     void clearAllFirmware();
 
+    QString getFirmwareForAlgo(QString algo = "");
+
 private:
     QString _getHash(QString file);
     QString _getHashString(QString s);

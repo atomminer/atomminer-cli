@@ -21,12 +21,12 @@
 #include <QObject>
 
 #include "utils/types.h"
-#include "stratumjob.h"
+#include "stratumwork.h"
 
-class Stratum : QObject
+class Stratum : public QObject
 {
     Q_OBJECT
-private:
+protected:
     Stratum();
 
 public:
@@ -43,28 +43,34 @@ public:
 
     // sets the algo(s) we're willing to mine. empty string for autopool
     void setAlgo(QString algo);
+    QString algo();
+
+    StratumWork* getWork(QString algo);
+    bool hasWork(QString algo);
+
+    void submit(StratumWork *w);
 
 public:
     // get human readable status
     std::string getStatus();
 
-private:
+protected:
     void thread();
 
-    void _disconnect(std::string reason = "");
-    bool _connect();
+    virtual void _disconnect(std::string reason = "");
+    virtual bool _connect();
 
-    bool _socket_full(int timeout);
-    bool _send(std::string s);
-    std::string _recv();
+    virtual bool _socket_full(int timeout);
+    virtual bool _send(std::string s);
+    virtual std::string _recv();
 
-    bool _subscribe();
-    bool _authorize();
-    bool _authorize_atom();
+    virtual bool _subscribe();
+    virtual bool _authorize();
+    virtual bool _authorize_atom();
 
     void _process_command(std::string s);
 
-private:
+protected:
     static Stratum *_instance;
     std::thread *_pThread;
 
@@ -109,7 +115,7 @@ private:
 signals:
     void connected();
     void disconnected(std::string reason);
-    void newJobReceived(std::string algo);
+    void newJobReceived(QString algo);
 };
 
 Stratum* stratum();

@@ -25,13 +25,13 @@ DeviceManager::~DeviceManager()
     _devs.erase(_devs.begin(), _devs.end());
 }
 
-void DeviceManager::Add(libusb_device *usbdev)
+void DeviceManager::add(libusb_device *usbdev)
 {
     AtomMinerDevice *dev = new AtomMinerDevice(usbdev);
-    Add(usbdev, dev);
+    add(usbdev, dev);
 }
 
-void DeviceManager::Add(libusb_device *usbdev, AtomMinerDevice *dev)
+void DeviceManager::add(libusb_device *usbdev, AtomMinerDevice *dev)
 {
     if(!dev)
         return;
@@ -40,7 +40,7 @@ void DeviceManager::Add(libusb_device *usbdev, AtomMinerDevice *dev)
     _devs[usbdev] = dev;
 }
 
-void DeviceManager::Remove(libusb_device *dev)
+void DeviceManager::remove(libusb_device *dev)
 {
     if(!dev)
         return;
@@ -53,24 +53,35 @@ void DeviceManager::Remove(libusb_device *dev)
         delete adev;
 }
 
-uint32_t DeviceManager::Count()
+uint32_t DeviceManager::count()
 {
     std::lock_guard<std::mutex> lock(_mutex);
     return _devs.size();
 }
 
-AtomMinerDevice *DeviceManager::Get(libusb_device *dev)
+AtomMinerDevice *DeviceManager::get(libusb_device *dev)
 {
     std::lock_guard<std::mutex> lock(_mutex);
 
     return _devs[dev];
 }
 
-AtomMinerDevice *DeviceManager::Get(uint32_t idx)
+AtomMinerDevice *DeviceManager::get(uint32_t idx)
 {
     std::lock_guard<std::mutex> lock(_mutex);
 
     std::map<libusb_device*, AtomMinerDevice*>::iterator it( _devs.begin() );
     std::advance(it, idx);
     return it->second;
+}
+
+bool DeviceManager::has(AtomMinerDevice *dev)
+{
+    std::lock_guard<std::mutex> lock(_mutex);
+
+    for (const auto& it : _devs)
+        if(it.second == dev)
+            return true;
+
+    return false;
 }

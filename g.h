@@ -14,6 +14,7 @@
 
 #include <QTime>
 
+#include "firmware/firmware.h"
 #include "device/hotplug.h"
 #include "device/devicemanager.h"
 
@@ -25,10 +26,11 @@ public:
     static volatile bool isShuttingDown;
     static DeviceManager DevMgr;
     static QDateTime    startTime;
+    static Firmware     fw;
 
     // TODO: Stratum manager?
 
-    static HotPlug HotPlugHandler;
+    static HotPlug *HotPlugHandler;
 };
 
 #endif // G_H

@@ -28,6 +28,7 @@ public:
     bool load(QString path);
 
     QString pool();
+    QString algo();
     QString user();
     QString password();
 
@@ -44,10 +45,10 @@ public:
     QString proxyUrl();
     int proxyPort();
 
-private:
-    QString _stringValue(QString name, QString def);
-    bool _boolValue(QString name, bool def);
-    int _intValue(QString name, int def);
+public:
+    QString stringValue(QString name, QString def);
+    bool boolValue(QString name, bool def);
+    int intValue(QString name, int def);
 
 private:
     static Conf *_instance;

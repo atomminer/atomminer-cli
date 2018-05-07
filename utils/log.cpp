@@ -25,6 +25,8 @@
 #include "types.h"
 
 #include "fmt/format.h"
+#include "build.h"
+
 
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
@@ -89,9 +91,8 @@ void _llog(int nLevel, const char *ss)
             break;
     }
 
-    //int len = 64 + (int) strlen(fmt) + 2;
-    //f = (char*) malloc(len);
-    fprintf(stdout, "\r[%d-%02d-%02d %02d:%02d:%02d]%s %s%s\n",
+    fprintf(stdout,
+        "\33[2K\r[%d-%02d-%02d %02d:%02d:%02d]%s %s%s\n",
         tm.tm_year + 1900,
         tm.tm_mon + 1,
         tm.tm_mday,
@@ -143,6 +144,7 @@ void logd(std::string s)
 
 void logproto(std::string s)
 {
+    //return;
     CHECK_S;
     _llog(LOG_DEBUG, s.c_str());
 }
